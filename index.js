@@ -9,6 +9,7 @@ const productRouter = require('./routes/product');
 const categoryRouter = require('./routes/category');
 const modalRouter = require('./routes/modal');
 const sizeRouter = require('./routes/size');
+const port = process.env.PORT || 8000;
 const productInfoRouter = require('./routes//productInfo');
 const cors = require("cors");
 app.use(cors());
@@ -31,7 +32,9 @@ app.use("/api/modal", modalRouter);
 app.use("/api/size", sizeRouter);
 app.use("/api/productInfo", productInfoRouter);
 
-
-app.listen(8000, () => {
+app.all("*",(req,res)=>{
+    res.send('No Route Found')
+})
+app.listen(port, () => {
     console.log(`Backend server is running on port`);
 })
