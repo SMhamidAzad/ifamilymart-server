@@ -18,6 +18,9 @@ const productInfoSchema = new mongoose.Schema(
     price: {
       type: String,
     },
+    image:{
+      type: String
+    },
     productCode: {
       type: String,
       required: true,
