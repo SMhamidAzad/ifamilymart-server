@@ -1,43 +1,16 @@
 const router = require('express').Router();
 const ProductInfo = require('../models/ProductInfo');
-const { v4: uuidv4 } = require('uuid');
 
-const multer = require("multer");
 const express = require("express");
 const product_route = express();
 const bodyParser = require("body-parser");
 product_route.use(bodyParser.json());
 product_route.use(bodyParser.urlencoded({ extended: true }));
-const sharp = require("sharp");
-const path = require("path");
 product_route.use(express.static('uploads'));
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, '../uploads/productImg'));
-    },
-    filename: function (req, file, cb) {
-        //   const name = Date.now() + '-' + file.originalname;
-        //   const webpName = name.replace(path.extname(name), '') + '.webp';
-        const desiredFilename = req.body.filename; // Get the desired filename from the request body
-        const webpName = desiredFilename.replace(path.extname(desiredFilename), '') + '.webp';
-        cb(null, webpName);
-    }
-});
-
-const fileFilter = function (req, file, cb) {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml'];
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
-    } else {
-        cb(new Error('Invalid file type. Only JPEG, JPG, PNG, and SVG files are allowed.'));
-    }
-};
+const imageUploadMiddleware = require('../middleware/imageUploadMiddleware')
 
 
-const upload = multer({ storage: storage, fileFilter: fileFilter });
-
-router.post("/", upload.single('image'), async (req, res) => {
+router.post("/", imageUploadMiddleware, async (req, res) => {
     console.log(req.file)
     try {
         const existingProduct = await ProductInfo.findOne({ image: req.file.filename });
