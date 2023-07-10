@@ -14,30 +14,37 @@ product_route.use(express.static('uploads'));
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, path.join(__dirname, '../uploads/productImg'));
+        cb(null, path.join(__dirname, '../uploads/productImg'));
     },
     filename: function (req, file, cb) {
-      const name = Date.now() + '-' + file.originalname;
-      const webpName = name.replace(path.extname(name), '') + '.webp';
-      cb(null, webpName);
+        //   const name = Date.now() + '-' + file.originalname;
+        //   const webpName = name.replace(path.extname(name), '') + '.webp';
+        const desiredFilename = req.body.filename; // Get the desired filename from the request body
+        const webpName = desiredFilename.replace(path.extname(desiredFilename), '') + '.webp';
+        cb(null, webpName);
     }
 });
 
 const fileFilter = function (req, file, cb) {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml'];
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only JPEG, JPG, PNG, and SVG files are allowed.'));
-  }
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/svg+xml'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Invalid file type. Only JPEG, JPG, PNG, and SVG files are allowed.'));
+    }
 };
 
 
-const upload = multer({ storage: storage, fileFilter: fileFilter});
+const upload = multer({ storage: storage, fileFilter: fileFilter });
 
-router.post("/",upload.array('image',2),  async(req, res) => {
+router.post("/", upload.single('image'), async (req, res) => {
+    console.log(req.file)
     try {
-          const newProductInfo = new ProductInfo({
+        const existingProduct = await ProductInfo.findOne({ image: req.file.filename });
+        if (existingProduct) {
+            res.status(500).json({ message: "Duplicate image. Same image cannot be uploaded multiple times." });
+        }
+        const newProductInfo = new ProductInfo({
             brandName: req.body.brandName,
             group: req.body.group,
             unit: req.body.unit,
@@ -50,8 +57,8 @@ router.post("/",upload.array('image',2),  async(req, res) => {
         res.status(200).send({
             message: "success",
             data: savedProductInfo
-        }) 
-    } catch(error) {
+        })
+    } catch (error) {
         res.status(400).send(error.message)
     }
 })
